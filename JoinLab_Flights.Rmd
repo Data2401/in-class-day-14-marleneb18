@@ -24,12 +24,30 @@ my_flights <- na.omit(my_flights) ## this dataset has data on cancelled flights 
 Create a dataframe of the average arrival delays for each _destination_
 
 ```{r}
+library(tidyverse)
+library(nycflights13)
 
+
+my_flights <- flights %>% na.omit()
+
+
+avg_arr_delay <- my_flights %>%
+  group_by(dest) %>%
+  summarize(Avg_Arrival_Delay = mean(arr_delay, na.rm = TRUE))
+print(avg_arr_delay)
 ```
 
 Then use `left_join()` to join on the "airports" dataframe, which has the airport information.
 
 ```{r}
+
+
+joined_data <- avg_arr_delay %>%
+  left_join(airports, by = c("dest" = "faa"))
+
+
+print(joined_data)
+View(joined_data) 
 
 ```
 
@@ -39,6 +57,20 @@ Note here: the column names don't match anymore!
 Which airport had the largest average arrival delay?
 
 ```{r}
+
+
+joined_data <- avg_arr_delay %>%
+  left_join(airports, by = c("dest" = "faa"))
+
+
+worst_airport <- joined_data %>%
+  arrange(desc(Avg_Arrival_Delay)) %>%
+  slice(1)  
+
+
+print(worst_airport)
+View(worst_airport)
+
 
 ```
 
@@ -50,13 +82,35 @@ What is the average departure delay for each airline? To answer this with someth
 ```{r}
 
 
-````
+avg_dep_delay <- my_flights %>%
+  group_by(carrier) %>%
+  summarize(Avg_Departure_Delay = mean(dep_delay, na.rm = TRUE))
+
+
+joined_airlines <- avg_dep_delay %>%
+  left_join(airlines, by = "carrier")
+
+
+print(joined_airlines)
+View(joined_airlines) 
+
+
+```
 
 Which airline had the smallest average departure delay? 
 
 
 
 ```{r}
+
+
+best_airline <- joined_airlines %>%
+  arrange(Avg_Departure_Delay) %>%  
+  slice(1)  
+
+
+print(best_airline)
+View(best_airline)
 
 
 
@@ -85,5 +139,45 @@ flights %>%
 ```
 
 
-What does anti_join(flights, airports, by = c("dest" = "faa")) tell you? What does anti_join(airports, flights, by = c("faa" = "dest")) tell you?
+What does anti_join(flights, airports, by = c("dest" = "faa")) tell you?
+```{r}
+unmatched_flights <- flights %>% 
+  anti_join(airports, by = c("dest" = "faa"))
+
+print(unmatched_flights)
+View(unmatched_flights)
+
+# it tells us which dataframes have the flights with destinations that do no appear in airports.
+```
+
+What does anti_join(airports, flights, by = c("faa" = "dest")) tell you?
+```{r}
+unmatched_airports <- airports %>% 
+  anti_join(flights, by = c("faa" = "dest"))
+
+print(unmatched_airports)
+View(unmatched_airports)
+
+# this tells us the dataframes that have airports that are lited in airports but are not used as destinations in flights.
+```
+
 Perform the two joins below and consider what the results are. 
+
+```{r}
+unmatched_flights <- flights %>% 
+  anti_join(airports, by = c("dest" = "faa"))
+
+print(unmatched_flights)
+View(unmatched_flights)
+
+#fligths that have landed at destinations that are not in the airports, in other words missing from airports.
+
+unmatched_airports <- airports %>% 
+  anti_join(flights, by = c("faa" = "dest"))
+print(unmatched_airports)
+View(unmatched_airports)
+
+#this tells us the airports that exist in the airports but are not/never a destination in the flights.
+
+```
+
